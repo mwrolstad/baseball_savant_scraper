@@ -5,7 +5,7 @@ An easy tool to scrape the current odds listed on bettingdata.com
 ### Use as a command line:
 
 ```cmd
-python3 src/baseball_savant_scraper/__init__.py --sport "MLB" --game_date "05-21-2023"
+python3 src/baseball_savant_scraper/__init__.py --type "pitcher" --statistics "expected_statistics" --year "2023" --min="25"
 ```
 
 ### Import and use as a package:
