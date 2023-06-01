@@ -36,7 +36,7 @@ BASE_URL = "https://baseballsavant.mlb.com/leaderboard"
 REGEX = re.compile("(var data = )(.*)(;\\\n)")
 
 
-def scrape_stats(statistics: str, type: str, year: str, team: str = None, min: str = "q"):
+def scrape_stats(statistics: str, type: str, year: str, team: str = None, min: str = "q", proxies: dict = None):
     response = requests.get(
         f"{BASE_URL}/{statistics}",
         params={
@@ -48,15 +48,24 @@ def scrape_stats(statistics: str, type: str, year: str, team: str = None, min: s
         },
         cookies=COOKIES,
         headers=HEADERS,
+        proxies=proxies,
     )
-    print("Response:", response.status_code)
+    if response.status_code != 200:
+        print(f"Bad response code: {response.status_code}")
+        print(response.text)
+        for stats in stats_scripts:
+            print(stats.text)
+        return []
 
     stats_soup = BeautifulSoup(response.text, features="lxml")
     stats_scripts = stats_soup.select("script")
+
     stats_dicts = [stats.text for stats in stats_scripts if stats.text.strip().startswith("var data =")]
 
     if len(stats_dicts) == 0:
-        print("Could not find the JSON object")
+        print("Could not find the JSON object in response:")
+        for stats in stats_scripts:
+            print(stats)
         return []
 
     stats_matches = REGEX.findall(stats_dicts[0])
@@ -65,12 +74,12 @@ def scrape_stats(statistics: str, type: str, year: str, team: str = None, min: s
 
 
 class StatScraper:
-    def __init__(self, statistics: str, type: str, year: str, team: str = "", min: str = "q"):
+    def __init__(self, statistics: str, type: str, year: str, team: str = "", min: str = "q", proxies: dict = None):
         try:
-            self.stats = scrape_stats(statistics, type, year, team, min)
+            self.stats = scrape_stats(statistics, type, year, team, min, proxies)
         except Exception as e:
             print(f"An error occurred:\n{e}")
-            return
+            self.stats = []
 
 
 def main(statistics: str, type: str, year: int, team: str = "", min: str = "q"):
